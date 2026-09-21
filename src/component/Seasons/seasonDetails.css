@@ -1,89 +1,327 @@
-.seasons-background {
+@import url("https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800&family=Figtree:wght@400;500;600&display=swap");
+
+.season-page {
+  --ink: #0f1421;
+  --surface: #1a2133;
+  --line: #2a3349;
+  --text: #eceff5;
+  --muted: #8f99af;
+  --marquee: #f2b84b;
+
   position: relative;
+  isolation: isolate;
   min-height: 100vh;
-  color: white;
-}
-.seasons-background::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.65);
-  z-index: 1;
-}
-.seasons-container {
-  position: relative;
-  z-index: 2;
-  background-color: rgba(0, 0, 0, 0.1);
-  padding: 20px;
+  font-family: "Figtree", system-ui, sans-serif;
+  color: var(--text);
+  padding-block: 3rem 4rem;
 }
 
-.list-seasons-item {
-  background-color: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 8px;
-  display: flex;
-  flex-direction: row;
+/* Full-page backdrop, fading into the page */
+.season-page .sp-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  background-size: cover;
+  background-position: center 20%;
+  animation: sp-fade 1s ease-out both;
+}
+.season-page::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(to bottom, rgba(15, 20, 33, 0.72), rgba(15, 20, 33, 0.9) 55%, var(--ink)),
+    linear-gradient(to right, rgba(15, 20, 33, 0.6), transparent);
+}
+@keyframes sp-fade { from { opacity: 0; } to { opacity: 1; } }
+
+.season-page .sp-layout {
+  display: grid;
+  grid-template-columns: minmax(200px, 270px) 1fr;
+  gap: clamp(1.5rem, 4vw, 3rem);
   align-items: start;
 }
 
-.list-seasons-item img {
-  max-width: 150px;
+/* ================= Show column ================= */
+.season-page .sp-show {
+  position: sticky;
+  top: 96px;
+  text-align: center;
+}
+.season-page .sp-show-link { display: block; color: var(--text); text-decoration: none; }
+.season-page .sp-poster {
+  width: 100%;
+  aspect-ratio: 2 / 3;
   object-fit: cover;
+  border-radius: 16px;
+  box-shadow: 0 30px 60px -25px rgba(0, 0, 0, 0.95);
+  outline: 1px solid rgba(236, 239, 245, 0.1);
+  outline-offset: -1px;
+  transition: transform 0.3s, box-shadow 0.3s;
 }
-
-.list-seasons-item h5 {
-  margin-bottom: 0.5rem;
-  color: white;
+.season-page .sp-show-link:hover .sp-poster {
+  transform: translateY(-4px);
+  box-shadow: 0 34px 60px -25px rgba(0, 0, 0, 0.95), 0 0 0 2px var(--marquee);
 }
+.season-page .sp-show-name {
+  font-family: "Big Shoulders Display", Impact, sans-serif;
+  font-weight: 800;
+  font-size: clamp(1.9rem, 3vw, 2.4rem);
+  line-height: 1 !important;
+  margin: 1.1rem 0 0.4rem;
+  text-wrap: balance;
+  transition: color 0.2s;
+}
+.season-page .sp-show-link:hover .sp-show-name { color: var(--marquee); }
+.season-page .sp-show-date { color: var(--muted); margin-bottom: 1rem; }
 
-.list-seasons-item p {
+.season-page .sp-stats {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+.season-page .sp-stats span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.3rem 0.8rem;
+  border-radius: 999px;
+  background: rgba(236, 239, 245, 0.08);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+.season-page .sp-stats i { color: var(--marquee); font-size: 0.85em; }
+
+.season-page .sp-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.season-page .sp-back:hover { color: var(--marquee); }
+
+/* ================= Episodes box ================= */
+.season-page .sp-episodes-box {
+  min-width: 0;
+  padding: 1.5rem;
+  background: rgba(26, 33, 51, 0.55);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(236, 239, 245, 0.08);
+  border-radius: 20px;
+  transition: opacity 0.2s;
+}
+.season-page.is-loading .sp-list { opacity: 0.45; pointer-events: none; }
+
+.season-page .sp-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 1rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--line);
+  position: relative;
+}
+.season-page .sp-head::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  width: 64px;
+  height: 2px;
+  background: var(--marquee);
+}
+.season-page .sp-title {
+  font-family: "Big Shoulders Display", Impact, sans-serif;
+  font-weight: 700;
+  font-size: clamp(1.9rem, 3.4vw, 2.5rem);
+  line-height: 1 !important;
   margin: 0;
 }
-.transparent-bg {
-  background-color: rgba(0, 0, 0, 0.5);
-}
-/* Scrollbar styles for WebKit browsers */
-.list-seasons::-webkit-scrollbar {
-  width: 8px; 
-  background-color: rgba(0, 0, 0, 0.8); 
+.season-page .sp-title span {
+  color: var(--muted);
+  font-weight: 700;
+  margin-left: 0.4rem;
 }
 
-.list-seasons::-webkit-scrollbar-thumb {
-  background-color: #555;
-  border-radius: 8px; 
-  border: 2px solid rgba(0, 0, 0, 0.8); 
+/* Season dropdown */
+.season-page .sp-season-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 1.1rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--text);
+  font-weight: 600;
+  transition: border-color 0.2s;
 }
+.season-page .sp-season-btn:hover,
+.season-page .sp-season-btn[aria-expanded="true"] { border-color: var(--marquee); }
+.season-page .sp-season-btn::after { border-top-color: var(--marquee); }
 
-.list-seasons::-webkit-scrollbar-thumb:hover {
-  background-color: #777; 
-}
-
-/* For Firefox */
-.list-seasons {
+.season-page .sp-menu {
+  min-width: 220px;
+  max-height: 320px;
+  overflow-y: auto;
+  padding: 0.4rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: 0 24px 50px -20px rgba(0, 0, 0, 0.9);
   scrollbar-width: thin;
-  scrollbar-color: #555 rgba(0, 0, 0, 0.8);
+  scrollbar-color: var(--line) transparent;
+}
+.season-page .sp-menu .dropdown-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.55rem 0.8rem;
+  border-radius: 8px;
+  color: var(--text);
+  font-weight: 500;
+}
+.season-page .sp-menu .dropdown-item small { color: var(--muted); }
+.season-page .sp-menu .dropdown-item:hover,
+.season-page .sp-menu .dropdown-item:focus { background: rgba(236, 239, 245, 0.07); color: var(--text); }
+.season-page .sp-menu .dropdown-item.is-active { background: rgba(242, 184, 75, 0.14); color: var(--marquee); font-weight: 600; }
+
+/* Scrolling list */
+.season-page .sp-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-height: calc(100vh - 220px);
+  overflow-y: auto;
+  padding-right: 0.5rem;
+  margin-right: -0.5rem;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(242, 184, 75, 0.35) transparent;
+  transition: opacity 0.2s;
+}
+.season-page .sp-list::-webkit-scrollbar { width: 6px; }
+.season-page .sp-list::-webkit-scrollbar-thumb { background: rgba(242, 184, 75, 0.35); border-radius: 6px; }
+.season-page .sp-list::-webkit-scrollbar-thumb:hover { background: var(--marquee); }
+
+/* Episode rows */
+.season-page .sp-ep {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.25rem;
+  padding: 0.9rem;
+  border: 1px solid rgba(236, 239, 245, 0.08);
+  border-radius: 14px;
+  background: rgba(15, 20, 33, 0.45);
+  transition: border-color 0.2s, background 0.2s;
+}
+.season-page .sp-ep:hover { border-color: rgba(242, 184, 75, 0.45); background: rgba(15, 20, 33, 0.7); }
+.season-page .sp-ep.is-upcoming { border-style: dashed; background: transparent; }
+.season-page .sp-ep.is-upcoming .sp-ep-still img { filter: grayscale(0.7) brightness(0.75); }
+
+.season-page .sp-ep-still {
+  position: relative;
+  flex: 0 0 200px;
+  aspect-ratio: 16 / 9;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--ink);
+}
+.season-page .sp-ep-still img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.season-page .sp-ep-num {
+  position: absolute;
+  left: 0.45rem;
+  bottom: 0.45rem;
+  min-width: 1.9rem;
+  padding: 0.1rem 0.45rem;
+  border-radius: 6px;
+  background: rgba(15, 20, 33, 0.85);
+  backdrop-filter: blur(6px);
+  font-family: "Big Shoulders Display", Impact, sans-serif;
+  font-weight: 800;
+  font-size: 1.1rem;
+  line-height: 1.2;
+  text-align: center;
+  color: var(--marquee);
 }
 
+.season-page .sp-ep-body { min-width: 0; flex: 1; }
+.season-page .sp-ep-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  line-height: 1.3;
+  margin: 0.1rem 0 0.35rem;
+}
+.season-page .sp-ep-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem 0.9rem;
+  color: var(--muted);
+  font-size: 0.875rem;
+  margin-bottom: 0.55rem;
+}
+.season-page .sp-ep-rating { display: inline-flex; align-items: center; gap: 0.3rem; color: var(--text); font-weight: 600; }
+.season-page .sp-ep-rating i { color: var(--marquee); font-size: 0.85em; }
+.season-page .sp-ep-tag {
+  padding: 0.1rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(242, 184, 75, 0.14);
+  color: var(--marquee);
+  font-weight: 600;
+}
+.season-page .sp-ep-overview {
+  color: #c4cad8;
+  line-height: 1.6;
+  font-size: 0.95rem;
+  margin: 0;
+}
 
-@media (max-width: 768px) {
-  .list-seasons-item {
-    flex-direction: column;
-    text-align: center;
-    align-items: center; 
-  }
-  .list-seasons-item img {
-    margin: 0 auto 1rem !important; 
-    display: block;
-  }
-  .list-seasons-item h5,
-  .list-seasons-item span,
-  .list-seasons-item p {
-    margin: 0.5rem 0;
-  }
-  .episodes-box{
-    margin-left: 0 !important;
-  }
+.season-page .sp-empty {
+  text-align: center;
+  padding: 4rem 1rem;
+  color: var(--muted);
+}
+.season-page .sp-empty i { font-size: 2rem; color: var(--marquee); margin-bottom: 0.75rem; }
+.season-page .sp-empty p { margin: 0; }
+
+/* Skeleton */
+.season-page .sp-sk {
+  background: linear-gradient(90deg, var(--surface) 25%, #232b40 50%, var(--surface) 75%);
+  background-size: 200% 100%;
+  animation: sp-shimmer 1.4s linear infinite;
+}
+.season-page .sp-sk-row { height: 130px; border-radius: 14px; }
+@keyframes sp-shimmer { to { background-position: -200% 0; } }
+
+/* ================= Accessibility & responsive ================= */
+.season-page a:focus-visible,
+.season-page button:focus-visible {
+  outline: 2px solid var(--marquee);
+  outline-offset: 3px;
+}
+
+@media (max-width: 767px) {
+  .season-page .sp-layout { grid-template-columns: 1fr; }
+  .season-page .sp-show { position: static; }
+  .season-page .sp-poster { width: min(200px, 55%); margin-inline: auto; display: block; }
+  .season-page .sp-episodes-box { padding: 1rem; }
+  .season-page .sp-list { max-height: none; overflow: visible; padding-right: 0; margin-right: 0; }
+  .season-page .sp-ep { flex-direction: column; }
+  .season-page .sp-ep-still { flex: none; width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .season-page .sp-backdrop, .season-page .sp-sk { animation: none; }
+  .season-page .sp-poster { transition: none; }
 }

@@ -1,0 +1,263 @@
+@import url("https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800&family=Figtree:wght@400;500;600&display=swap");
+
+.discover {
+  --ink: #0f1421;
+  --surface: #1a2133;
+  --line: #2a3349;
+  --text: #eceff5;
+  --muted: #8f99af;
+  --marquee: #f2b84b;
+  --marquee-hover: #ffcb66;
+
+  font-family: "Figtree", system-ui, sans-serif;
+  color: var(--text);
+  padding-block: 2rem 4.5rem;
+  color-scheme: dark;
+}
+
+/* ---------- Header ---------- */
+.discover-head {
+  padding-bottom: 1.5rem;
+  margin-bottom: 1.75rem;
+  border-bottom: 1px solid var(--line);
+  position: relative;
+}
+.discover-head::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  width: 64px;
+  height: 2px;
+  background: var(--marquee);
+}
+.discover-title {
+  font-family: "Big Shoulders Display", Impact, sans-serif;
+  font-weight: 800;
+  font-size: clamp(2.5rem, 6vw, 4rem);
+  line-height: 0.95 !important;
+  margin: 0 0 0.6rem;
+}
+.discover-sub {
+  color: var(--muted);
+  max-width: 60ch;
+  margin: 0;
+}
+
+/* ---------- Toolbar ---------- */
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+.toolbar-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.result-count {
+  margin: 0;
+  font-weight: 600;
+}
+
+.segmented {
+  display: inline-flex;
+  padding: 4px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+}
+.segmented button {
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font-weight: 600;
+  padding: 0.5rem 1.1rem;
+  border-radius: 999px;
+  transition: color 0.2s, background 0.2s;
+}
+.segmented button:hover { color: var(--text); }
+.segmented button.is-active {
+  background: var(--marquee);
+  color: #1b1405;
+}
+
+.select select {
+  appearance: none;
+  background: var(--surface)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none' stroke='%238f99af' stroke-width='2'%3E%3Cpath d='M1 1.5l5 5 5-5'/%3E%3C/svg%3E")
+    no-repeat right 0.9rem center;
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.55rem 2.3rem 0.55rem 1rem;
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+.select select:hover { border-color: var(--muted); }
+.select select option { background: var(--surface); }
+
+/* ---------- Genres ---------- */
+.genre-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+.chip {
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--text);
+  padding: 0.4rem 0.95rem;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: border-color 0.2s, background 0.2s, color 0.2s;
+}
+.chip:hover { border-color: var(--marquee); }
+.chip.is-on {
+  background: rgba(242, 184, 75, 0.14);
+  border-color: var(--marquee);
+  color: var(--marquee);
+}
+
+/* ---------- Active filters ---------- */
+.active-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.75rem;
+  background: var(--surface);
+  border-radius: 14px;
+}
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  border: 0;
+  background: var(--marquee);
+  color: #1b1405;
+  font-weight: 600;
+  font-size: 0.875rem;
+  padding: 0.3rem 0.8rem;
+  border-radius: 999px;
+}
+.tag i { font-size: 0.8em; opacity: 0.7; }
+.tag:hover { background: var(--marquee-hover); }
+.clear-all {
+  margin-left: auto;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.clear-all:hover { color: var(--text); }
+
+/* ---------- Buttons ---------- */
+.btn-marquee {
+  display: inline-block;
+  background: var(--marquee);
+  color: #1b1405;
+  font-weight: 600;
+  border: 0;
+  border-radius: 999px;
+  padding: 0.75rem 1.75rem;
+  box-shadow: 0 8px 24px -8px rgba(242, 184, 75, 0.6);
+  transition: background 0.15s;
+}
+.btn-marquee:hover { background: var(--marquee-hover); }
+
+/* ---------- Pagination ---------- */
+.pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 3rem;
+}
+.pager-pages { display: flex; gap: 0.35rem; }
+.pager-step,
+.pager-num {
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--text);
+  font-weight: 600;
+  border-radius: 999px;
+  transition: border-color 0.2s, color 0.2s;
+}
+.pager-step {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 1.1rem;
+}
+.pager-num {
+  min-width: 2.5rem;
+  height: 2.5rem;
+  padding: 0 0.5rem;
+}
+.pager-step:hover:not(:disabled),
+.pager-num:hover { border-color: var(--marquee); color: var(--marquee); }
+.pager-num.is-current {
+  background: var(--marquee);
+  border-color: var(--marquee);
+  color: #1b1405;
+}
+.pager-step:disabled { opacity: 0.35; cursor: not-allowed; }
+.pager-gap { align-self: center; color: var(--muted); padding: 0 0.25rem; }
+
+/* ---------- States ---------- */
+.state { text-align: center; padding-block: 5rem; }
+.state-icon { font-size: 2.5rem; color: var(--marquee); margin-bottom: 1rem; }
+.state-title {
+  font-family: "Big Shoulders Display", Impact, sans-serif;
+  font-weight: 700;
+  font-size: 2rem;
+}
+.state p { color: var(--muted); margin-bottom: 1.5rem; }
+
+.sk {
+  background: linear-gradient(90deg, var(--surface) 25%, #232b40 50%, var(--surface) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s linear infinite;
+  border-radius: 14px;
+}
+.sk-poster { aspect-ratio: 2 / 3; }
+@keyframes shimmer { to { background-position: -200% 0; } }
+
+/* ---------- Accessibility & responsive ---------- */
+.discover button:focus-visible,
+.discover select:focus-visible {
+  outline: 2px solid var(--marquee);
+  outline-offset: 3px;
+}
+
+@media (max-width: 767px) {
+  /* Genres scroll sideways instead of stacking many rows */
+  .genre-row {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+    scrollbar-width: none;
+  }
+  .genre-row::-webkit-scrollbar { display: none; }
+  .chip { white-space: nowrap; }
+  .toolbar-controls { width: 100%; }
+  .select { flex: 1; }
+  .select select { width: 100%; }
+  .pager-step span { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sk { animation: none; }
+}

@@ -1,378 +1,350 @@
-import React, { useState, useEffect, useCallback } from "react";
-import CardMovies from "../Home/component/CardMovies";
+import React, { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import axios from "axios";
+import CardMovies from "../Home/component/CardMovies";
+import "./movies.css";
+
+// Move this to an env variable (.env) before deploying
+const API_KEY = "c9fac173689f5f01ba1b0420f66d7093";
+
+const api = axios.create({
+  baseURL: "https://api.themoviedb.org/3",
+  params: { api_key: API_KEY, language: "en-US" },
+});
+
+const TABS = [
+  { id: "trending", label: "Trending", endpoint: "/trending/movie/day" },
+  { id: "top_rated", label: "Top rated", endpoint: "/movie/top_rated" },
+  { id: "upcoming", label: "Upcoming", endpoint: "/movie/upcoming" },
+];
+
+const LANGUAGES = [
+  { code: "ar", name: "Arabic" },
+  { code: "en", name: "English" },
+  { code: "fr", name: "French" },
+  { code: "hi", name: "Hindi" },
+  { code: "ja", name: "Japanese" },
+  { code: "ko", name: "Korean" },
+  { code: "es", name: "Spanish" },
+  { code: "tr", name: "Turkish" },
+];
+
+// `api` = server-side sort used when filtering (sorts across all pages)
+const SORTS = [
+  { id: "", label: "Default order" },
+  { id: "rating", label: "Rating", api: "vote_average.desc" },
+  { id: "popularity", label: "Popularity", api: "popularity.desc" },
+  { id: "vote", label: "Most voted", api: "vote_count.desc" },
+  { id: "meta", label: "Meta score" },
+];
+
+const CLIENT_SORT = {
+  rating: (a, b) => b.vote_average - a.vote_average,
+  popularity: (a, b) => b.popularity - a.popularity,
+  vote: (a, b) => b.vote_count - a.vote_count,
+  meta: (a, b) => b.vote_average * b.popularity - a.vote_average * a.popularity,
+};
+
+const YEARS = Array.from(
+  { length: new Date().getFullYear() + 1 - 1950 + 1 },
+  (_, i) => new Date().getFullYear() + 1 - i
+);
+
+function pageItems(current, total) {
+  const pages = [...new Set([1, current - 1, current, current + 1, total])]
+    .filter((p) => p >= 1 && p <= total)
+    .sort((a, b) => a - b);
+  const out = [];
+  pages.forEach((p, i) => {
+    if (i && p - pages[i - 1] > 1) out.push(`gap-${p}`);
+    out.push(p);
+  });
+  return out;
+}
+
+function Select({ label, value, onChange, children }) {
+  return (
+    <label className="select">
+      <span className="visually-hidden">{label}</span>
+      <select value={value} onChange={(e) => onChange(e.target.value)}>
+        {children}
+      </select>
+    </label>
+  );
+}
 
 export default function Movies() {
-  const [activeTab, setActiveTab] = useState("trending");
-  const [moviesData, setMoviesData] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1);
+  // Filters live in the URL, so Back from a movie page restores them
+  const [params, setParams] = useSearchParams();
+  const tab = params.get("tab") || "trending";
+  const page = Number(params.get("page")) || 1;
+  const year = params.get("year") || "";
+  const lang = params.get("lang") || "";
+  const sort = params.get("sort") || "";
+  const genreParam = params.get("genres") || "";
+  const selectedGenres = useMemo(
+    () => (genreParam ? genreParam.split(",").map(Number) : []),
+    [genreParam]
+  );
+  const isFiltering = Boolean(year || lang || selectedGenres.length);
+  const serverSort = isFiltering ? sort : "";
+
   const [genres, setGenres] = useState([]);
-  const [selectedGenre, setSelectedGenre] = useState(null);
-  const [selectedFilter, setSelectedFilter] = useState("filter type");
-  const [year, setYear] = useState("");
-  const [selectedLanguage, setSelectedLanguage] = useState(null);
-  const [selectedSort, setSelectedSort] = useState(null);
+  const [data, setData] = useState({ results: [], totalPages: 1, totalResults: 0 });
+  const [status, setStatus] = useState("loading");
+  const [reloadKey, setReloadKey] = useState(0);
 
-  const languages = [
-    { code: "ar", name: "Arabic" },
-    { code: "en", name: "English" },
-    { code: "fr", name: "French" },
-    { code: "hi", name: "Hindi (Indian)" },
-    { code: "tr", name: "Turkish" },
-  ];
+  const update = (changes, { keepPage = false } = {}) => {
+    const next = new URLSearchParams(params);
+    Object.entries(changes).forEach(([key, val]) =>
+      val === "" || val == null ? next.delete(key) : next.set(key, String(val))
+    );
+    if (!keepPage) next.delete("page");
+    setParams(next);
+  };
 
-  const years = Array.from(
-    { length: new Date().getFullYear() - 1950 + 1 },
-    (_, i) => 1950 + i
-  ).reverse();
+  const goToPage = (p) => update({ page: p === 1 ? "" : p }, { keepPage: true });
+
+  const toggleGenre = (id) => {
+    const next = selectedGenres.includes(id)
+      ? selectedGenres.filter((g) => g !== id)
+      : [...selectedGenres, id];
+    update({ genres: next.join(",") });
+  };
+
+  const clearFilters = () => update({ year: "", lang: "", genres: "", sort: "" });
 
   useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [currentPage]);
-
-  useEffect(() => {
-    const fetchGenres = async () => {
-      try {
-        const response = await axios.get(
-          "https://api.themoviedb.org/3/genre/movie/list?api_key=c9fac173689f5f01ba1b0420f66d7093&language=en-US"
-        );
-        setGenres(response.data.genres);
-      } catch (err) {
-        console.error("Error fetching genres:", err);
-      }
-    };
-
-    fetchGenres();
+    api
+      .get("/genre/movie/list")
+      .then(({ data }) => setGenres(data.genres))
+      .catch((err) => console.error("Error fetching genres:", err));
   }, []);
 
-  const fetchMoviesData = useCallback(async () => {
-    let url = "";
-  
-    if (year && selectedGenre && selectedFilter === "genre") {
-      url = `https://api.themoviedb.org/3/discover/movie?api_key=c9fac173689f5f01ba1b0420f66d7093&page=${currentPage}&with_genres=${selectedGenre}&primary_release_year=${year}`;
-    } 
-    else if (year && selectedLanguage && selectedFilter === "language") {
-      url = `https://api.themoviedb.org/3/discover/movie?api_key=c9fac173689f5f01ba1b0420f66d7093&page=${currentPage}&with_original_language=${selectedLanguage}&primary_release_year=${year}`;
-    }
-    else if (selectedGenre && selectedFilter === "genre") {
-      url = `https://api.themoviedb.org/3/discover/movie?api_key=c9fac173689f5f01ba1b0420f66d7093&language=en-US&page=${currentPage}&with_genres=${selectedGenre}`;
-    } 
-    else if (selectedLanguage && selectedFilter === "language") {
-      url = `https://api.themoviedb.org/3/discover/movie?api_key=c9fac173689f5f01ba1b0420f66d7093&page=${currentPage}&with_original_language=${selectedLanguage}`;
-    } 
-    else if (year) {
-      url = `https://api.themoviedb.org/3/discover/movie?api_key=c9fac173689f5f01ba1b0420f66d7093&language=en-US&page=${currentPage}&primary_release_year=${year}`;
-    } 
-    else if (activeTab === "trending") {
-      url = `https://api.themoviedb.org/3/trending/movie/day?api_key=c9fac173689f5f01ba1b0420f66d7093&page=${currentPage}`;
-    } 
-    else if (activeTab === "top_rated") {
-      url = `https://api.themoviedb.org/3/movie/top_rated?api_key=c9fac173689f5f01ba1b0420f66d7093&language=en-US&page=${currentPage}`;
-    } 
-    else if (activeTab === "upcoming") {
-      url = `https://api.themoviedb.org/3/movie/upcoming?api_key=c9fac173689f5f01ba1b0420f66d7093&language=en-US&page=${currentPage}`;
-    }
-  
-    try {
-      const response = await axios.get(url);
-      let movies = response.data.results;
-  
-      if (selectedSort === "rating") {
-        movies = movies.sort((a, b) => b.vote_average - a.vote_average);
-      } else if (selectedSort === "popularity") {
-        movies = movies.sort((a, b) => b.popularity - a.popularity);
-      } else if (selectedSort === "vote") {
-        movies = movies.sort((a, b) => b.vote_count - a.vote_count);
-      } else if (selectedSort === "meta") {
-        movies = movies.sort((a, b) => (b.vote_average * b.popularity) - (a.vote_average * a.popularity));
-      }
-  
-      setMoviesData(movies);
-    } catch (err) {
-      console.error("Error fetching movies data:", err);
-    }
-  }, [activeTab, currentPage, selectedGenre, selectedLanguage, selectedFilter, selectedSort, year]);
-  
-
-useEffect(() => {
-  setSelectedSort(null);
-}, [activeTab, selectedFilter, selectedGenre, selectedLanguage]);
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [page]);
 
   useEffect(() => {
-    fetchMoviesData();
-  }, [fetchMoviesData]);
+    const controller = new AbortController();
+    const query = { page };
+    let endpoint;
 
-  const handleYearSelect = (selectedYear) => {
-    setYear(selectedYear);
-    setCurrentPage(1);
-  };
+    if (isFiltering) {
+      endpoint = "/discover/movie";
+      if (genreParam) query.with_genres = genreParam;
+      if (lang) query.with_original_language = lang;
+      if (year) query.primary_release_year = year;
+      query.sort_by = SORTS.find((s) => s.id === serverSort)?.api || "popularity.desc";
+      if (serverSort === "rating") query["vote_count.gte"] = 100; // skip 10/10 movies with 2 votes
+    } else {
+      endpoint = (TABS.find((t) => t.id === tab) || TABS[0]).endpoint;
+    }
 
-  const handleLanguageClick = (languageCode) => {
-    setSelectedLanguage(selectedLanguage === languageCode ? null : languageCode);
-    setCurrentPage(1);
-  };
+    setStatus("loading");
+    api
+      .get(endpoint, { params: query, signal: controller.signal })
+      .then(({ data }) => {
+        setData({
+          results: data.results,
+          totalPages: Math.max(1, Math.min(data.total_pages, 500)), // TMDB caps at 500
+          totalResults: data.total_results,
+        });
+        setStatus("ready");
+      })
+      .catch((err) => {
+        if (!axios.isCancel(err)) {
+          console.error("Error fetching movies:", err);
+          setStatus("error");
+        }
+      });
 
+    return () => controller.abort();
+  }, [tab, page, year, lang, genreParam, serverSort, isFiltering, reloadKey]);
 
-  const handleGenreClick = (genreId) => {
-    setSelectedGenre(selectedGenre === genreId ? null : genreId);
-    setCurrentPage(1);
-  };
+  const movies = useMemo(() => {
+    const compare = CLIENT_SORT[sort];
+    return compare ? [...data.results].sort(compare) : data.results;
+  }, [data.results, sort]);
+
+  const genreName = (id) => genres.find((g) => g.id === id)?.name || "Genre";
+  const langName = LANGUAGES.find((l) => l.code === lang)?.name || lang;
 
   return (
-    <div className="container my-4">
-     <div className="mb-4">
-      <div className="d-flex align-items-center mt-3">
-          <i className="fa-solid fa-filter fs-5 me-2"></i>
-          <h2>Discover Movies</h2>
-          <div className="dropdown">
-         <button
-          className="btn filter-items btn-secondary dropdown-toggle ms-2 me-1 py-1"
-          type="button"
-          id="filterDropdown"
-          data-bs-toggle="dropdown"
-          aria-expanded="false"
-        >
-        {selectedFilter === "filter type"
-          ? "Filter Type"
-          : selectedFilter === "genre"
-          ? "Genre"
-          : selectedFilter === "language"
-          ? "Language"
-          : ""}
-          </button>
-          <ul className="dropdown-menu" aria-labelledby="filterDropdown">
-          <li>
-          <button
-           className="dropdown-item"
-           onClick={() => {
-          setSelectedFilter("genre");
-          }}
-      >
-         Genre
-         </button>
-         </li>
-         <li>
-         <button
-         className="dropdown-item"
-         onClick={() => {
-          setSelectedFilter("language");
-        }}
-      >
-        Language
-        </button>
-        </li>
-        </ul>
-    </div>
-          {selectedFilter !== "filter type" && (
-          <div className="d-flex align-items-center">
-            <button
-              className="btn btn-dark fw-bold filter-items py-1"
-              onClick={() => {
-                setSelectedFilter("filter type");
-                setSelectedGenre(null);
-                setSelectedLanguage(null);
-                setCurrentPage(1);
-              }}
-            >
-              X
-            </button>
+    <div className="discover container">
+      <header className="discover-head">
+        <h1 className="discover-title">Discover movies</h1>
+        <p className="discover-sub">
+          Browse what's trending, top rated and coming soon, or narrow it down by
+          genre, language and year.
+        </p>
+      </header>
+
+      {/* Toolbar */}
+      <div className="toolbar">
+        {isFiltering ? (
+          <p className="result-count" aria-live="polite">
+            {status === "ready"
+              ? `${data.totalResults.toLocaleString()} movies match your filters`
+              : "Finding movies…"}
+          </p>
+        ) : (
+          <div className="segmented" role="tablist" aria-label="Movie lists">
+            {TABS.map((t) => (
+              <button
+                key={t.id}
+                role="tab"
+                aria-selected={tab === t.id}
+                className={tab === t.id ? "is-active" : ""}
+                onClick={() => update({ tab: t.id === "trending" ? "" : t.id })}
+              >
+                {t.label}
+              </button>
+            ))}
           </div>
         )}
-        <div className="dropdown">
-          <button
-            className="btn btn-secondary filter-items dropdown-toggle mx-1 py-1"
-            type="button"
-            id="yearDropdown"
-            data-bs-toggle="dropdown"
-            aria-expanded="false"
-          >
-            {year || "Year"}
-          </button>
-          <ul
-          className="dropdown-menu overflow-y-auto"
-          style={{ maxHeight: "200px" }}
-          aria-labelledby="yearDropdown"
-          >
-            {years.map((yr) => (
-              <li key={yr}>
-                <button
-                  className="dropdown-item"
-                  onClick={() => handleYearSelect(yr)}
-                >
-                  {yr}
-                </button>
-              </li>
+
+        <div className="toolbar-controls">
+          <Select label="Release year" value={year} onChange={(v) => update({ year: v })}>
+            <option value="">Any year</option>
+            {YEARS.map((y) => (
+              <option key={y} value={y}>{y}</option>
             ))}
-          </ul>
+          </Select>
+          <Select label="Original language" value={lang} onChange={(v) => update({ lang: v })}>
+            <option value="">Any language</option>
+            {LANGUAGES.map((l) => (
+              <option key={l.code} value={l.code}>{l.name}</option>
+            ))}
+          </Select>
+          <Select label="Sort by" value={sort} onChange={(v) => update({ sort: v })}>
+            {SORTS.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.id ? `Sort: ${s.label}` : s.label}
+              </option>
+            ))}
+          </Select>
         </div>
-        {year && (
+      </div>
+
+      {/* Genres */}
+      <div className="genre-row" role="group" aria-label="Filter by genre">
+        {genres.map((g) => (
           <button
-            className="btn btn-dark fw-bold filter-items py-1"
-            onClick={() => setYear(null)}
+            key={g.id}
+            className={`chip${selectedGenres.includes(g.id) ? " is-on" : ""}`}
+            aria-pressed={selectedGenres.includes(g.id)}
+            onClick={() => toggleGenre(g.id)}
           >
-            X
+            {g.name}
           </button>
-        )}
+        ))}
       </div>
-        {selectedFilter === "genre" && (
-          <div className="d-flex flex-wrap gap-2 my-3">
-            {genres.map((genre) => (
-              <button
-                key={genre.id}
-                className={`btn bg-secondary filter-items text-white rounded-5 ${
-                  selectedGenre === genre.id
-                    ? "active fw-bold bg-dark"
-                    : ""
-                }`}
-                onClick={() => handleGenreClick(genre.id)}
-              >
-                {genre.name}
-              </button>
+
+      {/* Active filters */}
+      {isFiltering && (
+        <div className="active-filters">
+          {year && (
+            <button className="tag" onClick={() => update({ year: "" })}>
+              {year} <i className="fa-solid fa-xmark" aria-hidden="true"></i>
+              <span className="visually-hidden">Remove year</span>
+            </button>
+          )}
+          {lang && (
+            <button className="tag" onClick={() => update({ lang: "" })}>
+              {langName} <i className="fa-solid fa-xmark" aria-hidden="true"></i>
+              <span className="visually-hidden">Remove language</span>
+            </button>
+          )}
+          {selectedGenres.map((id) => (
+            <button key={id} className="tag" onClick={() => toggleGenre(id)}>
+              {genreName(id)} <i className="fa-solid fa-xmark" aria-hidden="true"></i>
+              <span className="visually-hidden">Remove genre</span>
+            </button>
+          ))}
+          <button className="clear-all" onClick={clearFilters}>
+            Clear all
+          </button>
+        </div>
+      )}
+
+      {/* Results */}
+      {status === "loading" && (
+        <div className="row g-4" aria-busy="true" aria-label="Loading movies">
+          {Array.from({ length: 12 }).map((_, i) => (
+            <div key={i} className="col-6 col-md-3 col-lg-2">
+              <div className="sk sk-poster" />
+            </div>
+          ))}
+        </div>
+      )}
+
+      {status === "error" && (
+        <div className="state">
+          <i className="fa-solid fa-plug-circle-xmark state-icon" aria-hidden="true"></i>
+          <h2 className="state-title">Movies didn't load</h2>
+          <p>Check your connection and try again.</p>
+          <button className="btn-marquee" onClick={() => setReloadKey((k) => k + 1)}>
+            Try again
+          </button>
+        </div>
+      )}
+
+      {status === "ready" && movies.length === 0 && (
+        <div className="state">
+          <i className="fa-solid fa-film state-icon" aria-hidden="true"></i>
+          <h2 className="state-title">No movies match these filters</h2>
+          <p>Try removing a genre or picking a different year.</p>
+          <button className="btn-marquee" onClick={clearFilters}>
+            Clear filters
+          </button>
+        </div>
+      )}
+
+      {status === "ready" && movies.length > 0 && (
+        <>
+          <div className="row g-4">
+            {movies.map((movie) => (
+              <CardMovies key={movie.id} movie={movie} showRating={true} />
             ))}
           </div>
-        )}
-        {selectedFilter === "language" && (
-          <div className="d-flex flex-wrap gap-2 my-3">
-            {languages.map((language) => (
+
+          {data.totalPages > 1 && (
+            <nav className="pager" aria-label="Pagination">
               <button
-                key={language.code}
-                className={`btn bg-secondary filter-items text-white rounded-5 ${
-                  selectedLanguage === language.code
-                    ? "active fw-bold bg-dark"
-                    : ""
-                }`}
-                onClick={() => handleLanguageClick(language.code)}
+                className="pager-step"
+                disabled={page <= 1}
+                onClick={() => goToPage(page - 1)}
               >
-                {language.name}
+                <i className="fa-solid fa-angle-left" aria-hidden="true"></i> Previous
               </button>
-            ))}
-          </div>
-        )}
-
-      <div className="tabs-container border-bottom">
-      <div className="d-flex justify-content-between align-items-center mt-3 pb-1">
-      {selectedFilter !== "genre" && selectedFilter !== "language" && !year  && (
-      <div className="d-flex align-items-center">
-      <ul className="nav nav-tabs align-items-center">
-      {[
-      { id: "trending", label: "Trending" },
-      { id: "top_rated", label: "Top Rated" },
-      { id: "upcoming", label: "Upcoming" },
-      ].map((tab) => (
-      <li className="nav-item" key={tab.id}>
-        <button
-          className={`nav-link ${
-            activeTab === tab.id ? "active fw-bold text-dark" : ""
-          }`}
-          onClick={() => {
-            setActiveTab(tab.id);
-            setCurrentPage(1);
-          }}
-        >
-          {tab.label}
-        </button>
-      </li>
-      ))}
-      </ul>
-      </div>
+              <div className="pager-pages">
+                {pageItems(page, data.totalPages).map((p) =>
+                  typeof p === "string" ? (
+                    <span key={p} className="pager-gap">…</span>
+                  ) : (
+                    <button
+                      key={p}
+                      className={`pager-num${p === page ? " is-current" : ""}`}
+                      aria-current={p === page ? "page" : undefined}
+                      onClick={() => goToPage(p)}
+                    >
+                      {p}
+                    </button>
+                  )
+                )}
+              </div>
+              <button
+                className="pager-step"
+                disabled={page >= data.totalPages}
+                onClick={() => goToPage(page + 1)}
+              >
+                Next <i className="fa-solid fa-angle-right" aria-hidden="true"></i>
+              </button>
+            </nav>
+          )}
+        </>
       )}
-
-<div className="dropdown">
-  <button
-    className="btn btn-primary dropdown-toggle px-4 py-1"
-    type="button"
-    id="sortDropdown"
-    data-bs-toggle="dropdown"
-    aria-expanded="false"
-  >
-    {selectedSort === null
-      ? "Sort by"
-      : selectedSort === "rating"
-      ? "Rating"
-      : selectedSort === "popularity"
-      ? "Popularity"
-      : selectedSort === "vote"
-      ? "People Vote"
-      : selectedSort === "meta"
-      ? "Meta Score"
-      : "Sort by"}
-  </button>
-  <ul className="dropdown-menu" aria-labelledby="sortDropdown">
-    <li>
-      <button
-        className="dropdown-item"
-        onClick={() => setSelectedSort("rating")}
-      >
-        Rating
-      </button>
-    </li>
-    <li>
-      <button
-        className="dropdown-item"
-        onClick={() => setSelectedSort("popularity")}
-      >
-        Popularity
-      </button>
-    </li>
-    <li>
-      <button
-        className="dropdown-item"
-        onClick={() => setSelectedSort("vote")}
-      >
-        People Vote
-      </button>
-    </li>
-    <li>
-      <button
-        className="dropdown-item"
-        onClick={() => setSelectedSort("meta")}
-      >
-        Meta Score
-      </button>
-    </li>
-  </ul>
-  {selectedSort !== null && (
-        <button
-        className="btn btn-dark fw-bold ms-1 px-1 py-0 rounded-5" 
-        onClick={() => setSelectedSort(null)}>
-          X
-        </button>
-      )}
-</div>
-</div>
-</div>
-</div>
-
-      <div className="row g-4 d-flex justify-content-center">
-      {moviesData.length > 0 ? (
-      moviesData.map((movie) => (
-      <CardMovies key={movie.id} movie={movie} showRating={true} />
-      ))
-      ) : (
-      <p className="text-center mt-4">
-      We're sorry, there are no available movies in{" "}
-      {year !== "year" ? year : "this selection"}.
-      </p>
-      )}
-      </div>
-
-      {moviesData.length > 0 ? (
-      <div className="d-flex justify-content-center align-items-center gap-2 mt-4">
-        <button
-          className="btn btn-secondary"
-          disabled={currentPage === 1}
-          onClick={() => setCurrentPage(currentPage - 1)}
-        >
-         <i class="fa-solid fa-angle-left me-1"></i>Previous
-        </button>
-        <button
-          className="btn btn-secondary"
-          onClick={() => setCurrentPage(currentPage + 1)}
-        >
-          Next<i class="ms-1 fa-solid fa-angle-right"></i>
-        </button>
-      </div>
-      ) : null}
     </div>
   );
 }

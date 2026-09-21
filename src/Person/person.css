@@ -1,0 +1,344 @@
+@import url("https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800&family=Figtree:wght@400;500;600&display=swap");
+
+.person-page {
+  --ink: #0f1421;
+  --surface: #1a2133;
+  --line: #2a3349;
+  --text: #eceff5;
+  --muted: #8f99af;
+  --marquee: #f2b84b;
+  --marquee-hover: #ffcb66;
+
+  font-family: "Figtree", system-ui, sans-serif;
+  color: var(--text);
+  padding-bottom: 4.5rem;
+}
+
+/* ================= Hero ================= */
+.person-page .person-hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  padding-block: clamp(2rem, 5vw, 4rem);
+}
+.person-page .person-hero-bg {
+  position: absolute;
+  inset: -40px;
+  z-index: -2;
+  background-size: cover;
+  background-position: center 30%;
+  filter: blur(18px) saturate(0.9);
+  opacity: 0.45;
+}
+.person-page .person-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(to bottom, rgba(15, 20, 33, 0.55), var(--ink) 95%);
+}
+
+.person-page .person-hero-inner {
+  display: grid;
+  grid-template-columns: minmax(200px, 300px) 1fr;
+  gap: clamp(1.5rem, 4vw, 3.5rem);
+  align-items: start;
+}
+.person-page .person-photo {
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+  border-radius: 18px;
+  box-shadow: 0 30px 60px -25px rgba(0, 0, 0, 0.9);
+  outline: 1px solid rgba(236, 239, 245, 0.08);
+  outline-offset: -1px;
+}
+
+.person-page .person-dept {
+  color: var(--marquee);
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+}
+.person-page .person-name {
+  font-family: "Big Shoulders Display", Impact, sans-serif;
+  font-weight: 800;
+  font-size: clamp(2.75rem, 6.5vw, 5rem);
+  line-height: 0.92 !important;
+  letter-spacing: 0.01em;
+  margin: 0 0 1.5rem;
+  text-wrap: balance;
+}
+
+.person-page .person-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 1rem 2rem;
+  margin: 0 0 1.5rem;
+  padding: 1.1rem 1.25rem;
+  background: rgba(26, 33, 51, 0.7);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+.person-page .person-facts dt {
+  color: var(--muted);
+  font-weight: 500;
+  font-size: 0.85rem;
+  margin-bottom: 0.2rem;
+}
+.person-page .person-facts dd { margin: 0; font-weight: 600; }
+
+.person-page .person-socials {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+.person-page .person-socials a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  color: var(--text);
+  font-size: 1.05rem;
+  text-decoration: none;
+  transition: border-color 0.2s, color 0.2s;
+}
+.person-page .person-socials a:hover { border-color: var(--marquee); color: var(--marquee); }
+
+.person-page .person-bio { max-width: 70ch; }
+.person-page .person-bio-text p {
+  color: #cfd5e2;
+  line-height: 1.7;
+  margin-bottom: 0.9rem;
+}
+.person-page .person-bio-text.is-clamped {
+  max-height: calc(1.7em * 6);
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to bottom, #000 55%, transparent);
+  mask-image: linear-gradient(to bottom, #000 55%, transparent);
+}
+.person-page .text-btn {
+  border: 0;
+  background: none;
+  padding: 0;
+  color: var(--marquee);
+  font-weight: 600;
+}
+.person-page .text-btn:hover { color: var(--marquee-hover); text-decoration: underline; text-underline-offset: 3px; }
+
+/* ================= Sections ================= */
+.person-page .person-section { margin-top: clamp(2.5rem, 5vw, 4rem); }
+
+.person-page .section-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 1rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid var(--line);
+  position: relative;
+}
+.person-page .section-head::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  width: 64px;
+  height: 2px;
+  background: var(--marquee);
+}
+.person-page .section-title {
+  font-family: "Big Shoulders Display", Impact, sans-serif;
+  font-weight: 700;
+  font-size: clamp(1.75rem, 3.2vw, 2.4rem);
+  line-height: 1 !important;
+  margin: 0;
+}
+
+.person-page .credits-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+.person-page .segmented {
+  display: inline-flex;
+  padding: 4px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+}
+.person-page .segmented button {
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font-weight: 600;
+  padding: 0.45rem 1rem;
+  border-radius: 999px;
+  transition: color 0.2s, background 0.2s;
+}
+.person-page .segmented button:hover { color: var(--text); }
+.person-page .segmented button.is-active { background: var(--marquee); color: #1b1405; }
+.person-page .segmented .count {
+  margin-left: 0.3rem;
+  font-weight: 500;
+  opacity: 0.7;
+}
+.person-page .segmented-sm button { padding: 0.45rem 0.85rem; font-size: 0.9rem; }
+.person-page .segmented-sm button.is-active { background: rgba(236, 239, 245, 0.12); color: var(--text); }
+
+/* ================= Credit cards ================= */
+.person-page .known-row {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(150px, 170px);
+  gap: 1.25rem;
+  overflow-x: auto;
+  padding-bottom: 0.75rem;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
+}
+.person-page .known-row .credit { scroll-snap-align: start; }
+
+.person-page .credit-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 2rem 1.25rem;
+}
+
+.person-page .credit {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  color: var(--text);
+  text-decoration: none;
+}
+.person-page .credit:hover { color: var(--text); }
+.person-page .credit-poster {
+  position: relative;
+  aspect-ratio: 2 / 3;
+  margin-bottom: 0.7rem;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--surface);
+  transition: transform 0.25s, box-shadow 0.25s;
+}
+.person-page .credit-poster img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.person-page .credit:hover .credit-poster {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 30px -18px rgba(0, 0, 0, 0.9), 0 0 0 2px var(--marquee);
+}
+.person-page .credit-rating {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(15, 20, 33, 0.8);
+  backdrop-filter: blur(6px);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.person-page .credit-rating i { color: var(--marquee); font-size: 0.85em; }
+.person-page .credit-title {
+  font-weight: 600;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.person-page .credit:hover .credit-title { color: var(--marquee); }
+.person-page .credit-year { color: var(--muted); font-size: 0.875rem; margin-top: 0.15rem; }
+.person-page .credit-role {
+  color: var(--muted);
+  font-size: 0.875rem;
+  font-style: italic;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.person-page .load-more { display: flex; justify-content: center; margin-top: 2.5rem; }
+.person-page .btn-outline {
+  padding: 0.7rem 1.75rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: none;
+  color: var(--text);
+  font-weight: 600;
+  transition: border-color 0.2s, color 0.2s;
+}
+.person-page .btn-outline:hover { border-color: var(--marquee); color: var(--marquee); }
+
+.person-page .empty-note { color: var(--muted); padding-block: 2rem; }
+
+/* ================= States ================= */
+.person-page .btn-marquee {
+  display: inline-block;
+  background: var(--marquee);
+  color: #1b1405;
+  font-weight: 600;
+  border: 0;
+  border-radius: 999px;
+  padding: 0.75rem 1.75rem;
+}
+.person-page .btn-marquee:hover { background: var(--marquee-hover); }
+
+.person-page .state { text-align: center; padding-block: 6rem; }
+.person-page .state-icon { font-size: 2.5rem; color: var(--marquee); margin-bottom: 1rem; }
+.person-page .state-title {
+  font-family: "Big Shoulders Display", Impact, sans-serif;
+  font-weight: 700;
+  font-size: 2rem;
+}
+.person-page .state p { color: var(--muted); margin-bottom: 1.5rem; }
+
+.person-page .person-skeleton {
+  display: grid;
+  grid-template-columns: minmax(200px, 300px) 1fr;
+  gap: 3rem;
+  padding-block: 4rem;
+}
+.person-page .sk {
+  background: linear-gradient(90deg, var(--surface) 25%, #232b40 50%, var(--surface) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s linear infinite;
+  border-radius: 12px;
+}
+.person-page .sk-photo { aspect-ratio: 2 / 3; border-radius: 18px; }
+.person-page .sk-lines { display: flex; flex-direction: column; gap: 1rem; }
+.person-page .sk-line { height: 1rem; }
+.person-page .sk-title { height: 4rem; width: 70%; }
+@keyframes shimmer { to { background-position: -200% 0; } }
+
+/* ================= Accessibility & responsive ================= */
+.person-page a:focus-visible,
+.person-page button:focus-visible {
+  outline: 2px solid var(--marquee);
+  outline-offset: 3px;
+}
+
+@media (max-width: 767px) {
+  .person-page .person-hero-inner,
+  .person-page .person-skeleton { grid-template-columns: 1fr; }
+  .person-page .person-photo,
+  .person-page .sk-photo { width: min(240px, 65%); margin-inline: auto; }
+  .person-page .person-info { text-align: center; }
+  .person-page .person-facts { text-align: left; }
+  .person-page .person-socials { justify-content: center; }
+  .person-page .person-bio { text-align: left; margin-inline: auto; }
+  .person-page .credit-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 1.5rem 1rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .person-page .sk { animation: none; }
+  .person-page .credit-poster { transition: none; }
+}
