@@ -4,14 +4,19 @@
   --mainColor: #131722; /* kept in case other files use it */
 }
 
-.site-nav {
+/* Tokens shared by the header and the drawer (the drawer lives in <body>) */
+.site-nav,
+.drawer,
+.drawer-backdrop {
   --ink: #0f1421;
   --surface: #1a2133;
   --line: #2a3349;
   --text: #eceff5;
   --muted: #8f99af;
   --marquee: #f2b84b;
+}
 
+.site-nav {
   position: sticky;
   top: 0;
   z-index: 1030;
@@ -261,27 +266,42 @@
 .drawer-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(5, 8, 15, 0.6);
+  z-index: 1040;
+  background: rgba(5, 8, 15, 0.75);
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.25s, visibility 0.25s;
+  transition: opacity 0.18s ease, visibility 0s linear 0.18s;
 }
-.drawer-backdrop.is-open { opacity: 1; visibility: visible; }
+.drawer-backdrop.is-open {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.18s ease, visibility 0s;
+}
 
 .drawer {
   position: fixed;
   top: 0;
   right: 0;
   bottom: 0;
+  z-index: 1050;
   width: min(320px, 82vw);
   padding: 1.25rem;
-  background: var(--ink);
+  overflow-y: auto;
+  background: var(--ink); /* fully opaque */
   border-left: 1px solid var(--line);
+  box-shadow: -20px 0 50px -20px rgba(0, 0, 0, 0.9);
+  font-family: "Figtree", system-ui, sans-serif;
+  color: var(--text);
   transform: translateX(100%);
   visibility: hidden;
-  transition: transform 0.3s cubic-bezier(0.2, 0.7, 0.2, 1), visibility 0.3s;
+  will-change: transform;
+  transition: transform 0.22s cubic-bezier(0.32, 0.72, 0, 1), visibility 0s linear 0.22s;
 }
-.drawer.is-open { transform: none; visibility: visible; }
+.drawer.is-open {
+  transform: none;
+  visibility: visible;
+  transition: transform 0.22s cubic-bezier(0.32, 0.72, 0, 1), visibility 0s;
+}
 .drawer-head {
   display: flex;
   align-items: center;
@@ -321,7 +341,9 @@
 
 /* ---------- Focus ---------- */
 .site-nav a:focus-visible,
-.site-nav button:focus-visible {
+.site-nav button:focus-visible,
+.drawer a:focus-visible,
+.drawer button:focus-visible {
   outline: 2px solid var(--marquee);
   outline-offset: 3px;
 }

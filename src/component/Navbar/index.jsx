@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import "./Navbar.css";
@@ -283,31 +284,36 @@ export default function Navbar() {
         </button>
       </div>
 
-      {/* Mobile drawer */}
-      <div
-        className={`drawer-backdrop${menuOpen ? " is-open" : ""}`}
-        onClick={() => setMenuOpen(false)}
-        aria-hidden="true"
-      />
-      <aside id="mobile-menu" className={`drawer${menuOpen ? " is-open" : ""}`} aria-label="Menu">
-        <div className="drawer-head">
-          <span className="brand">
-            <i className="fa-solid fa-clapperboard" aria-hidden="true"></i>
-            <span>Club de Cinema</span>
-          </span>
-          <button className="drawer-close" onClick={() => setMenuOpen(false)} aria-label="Close menu">
-            <i className="fa-solid fa-xmark" aria-hidden="true"></i>
-          </button>
-        </div>
-        <nav className="drawer-links">
-          {LINKS.map((l) => (
-            <NavLink key={l.to} to={l.to} className={drawerLinkClass}>
-              <i className={`fa-solid ${l.icon}`} aria-hidden="true"></i>
-              {l.label}
-            </NavLink>
-          ))}
-        </nav>
-      </aside>
+      {/* Mobile drawer: rendered in <body> so the header's blur can't clip it */}
+      {createPortal(
+        <>
+          <div
+            className={`drawer-backdrop${menuOpen ? " is-open" : ""}`}
+            onClick={() => setMenuOpen(false)}
+            aria-hidden="true"
+          />
+          <aside id="mobile-menu" className={`drawer${menuOpen ? " is-open" : ""}`} aria-label="Menu">
+            <div className="drawer-head">
+              <span className="brand">
+                <i className="fa-solid fa-clapperboard" aria-hidden="true"></i>
+                <span>Club de Cinema</span>
+              </span>
+              <button className="drawer-close" onClick={() => setMenuOpen(false)} aria-label="Close menu">
+                <i className="fa-solid fa-xmark" aria-hidden="true"></i>
+              </button>
+            </div>
+            <nav className="drawer-links">
+              {LINKS.map((l) => (
+                <NavLink key={l.to} to={l.to} className={drawerLinkClass}>
+                  <i className={`fa-solid ${l.icon}`} aria-hidden="true"></i>
+                  {l.label}
+                </NavLink>
+              ))}
+            </nav>
+          </aside>
+        </>,
+        document.body
+      )}
     </header>
   );
 }
